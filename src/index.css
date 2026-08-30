@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    @apply transition-colors duration-200 bg-[#FAFAFA] dark:bg-[#000000] text-neutral-900 dark:text-neutral-100;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neutral-300 dark:bg-neutral-800 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-neutral-400 dark:bg-neutral-700;
+  }
+}
+
+/* Glassmorphism and modern glow effects */
+.glass-card {
+  @apply bg-white/80 dark:bg-[#121212]/80 backdrop-blur-xl border border-neutral-200/80 dark:border-[#262626]/80 shadow-xl shadow-black/[0.03] dark:shadow-black/40;
+}
+
+.glass-input {
+  @apply bg-neutral-100/70 dark:bg-[#181818]/80 backdrop-blur-md border border-neutral-200/80 dark:border-[#2a2a2a] text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:border-[#E1306C] focus:ring-2 focus:ring-[#E1306C]/30 focus:outline-none transition-all;
+}
+
+.glass-panel {
+  @apply bg-white/70 dark:bg-[#141414]/70 backdrop-blur-lg border border-neutral-200/60 dark:border-[#222222]/80;
+}
+
+/* Modern ambient gradient backgrounds */
+.ambient-glow-1 {
+  background: radial-gradient(circle, rgba(225, 48, 108, 0.15) 0%, rgba(245, 96, 64, 0.08) 45%, transparent 70%);
+}
+
+.ambient-glow-2 {
+  background: radial-gradient(circle, rgba(131, 58, 180, 0.15) 0%, rgba(56, 151, 240, 0.08) 45%, transparent 70%);
+}
+
+/* Animation utilities */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(8px) rotate(-1deg);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 7s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 15px rgba(225, 48, 108, 0.35));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 30px rgba(245, 96, 64, 0.6));
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s infinite ease-in-out;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
