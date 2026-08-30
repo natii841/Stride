@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Category, TrackingItem, CreateCategoryDTO, UpdateCategoryDTO, CreateItemDTO, UpdateItemDTO } from '../types/database';
@@ -11,6 +11,7 @@ import { CreateItemModal } from '../components/CreateItemModal';
 import { FastStepperModal } from '../components/FastStepperModal';
 import { MilestoneCelebration } from '../components/MilestoneCelebration';
 import { EditProfileModal } from '../components/EditProfileModal';
+import { SearchAndFilterBar, FilterStatus, SortOption } from '../components/SearchAndFilterBar';
 import {
   LogOut,
   Moon,
@@ -26,6 +27,7 @@ import {
   Flame,
   UserCheck,
   Edit3,
+  SearchX,
 } from 'lucide-react';
 
 export const Feed: React.FC = () => {
@@ -36,6 +38,11 @@ export const Feed: React.FC = () => {
   const [items, setItems] = useState<TrackingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+  // Search, Status Filter & Sorting State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   // Modals state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -166,13 +173,109 @@ export const Feed: React.FC = () => {
     setIsFastStepperOpen(true);
   };
 
-  const filteredCategories = selectedCategoryId
-    ? categories.filter((c) => c.id === selectedCategoryId)
-    : categories;
+  // COMPUTED: Search, Status Filter & Sorting Logic
+  const { filteredAndSortedCategories, filteredItemsMap, totalMatchingGoalsCount } = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+
+    // 1. Filter items by query and status
+    const itemMatches = (item: TrackingItem) => {
+      const matchesStatus =
+        filterStatus === 'all'
+          ? true
+          : filterStatus === 'active'
+          ? item.current_value < item.target_value
+          : item.current_value >= item.target_value;
+
+      if (!matchesStatus) return false;
+
+      if (!q) return true;
+
+      const titleMatch = item.title.toLowerCase().includes(q);
+      const notesMatch = item.notes ? item.notes.toLowerCase().includes(q) : false;
+      const unitMatch = item.unit.toLowerCase().includes(q);
+      return titleMatch || notesMatch || unitMatch;
+    };
+
+    // Sort items helper
+    const sortItemsList = (itemList: TrackingItem[]) => {
+      return [...itemList].sort((a, b) => {
+        if (sortBy === 'highest_progress') {
+          return b.current_value / b.target_value - a.current_value / a.target_value;
+        }
+        if (sortBy === 'lowest_progress') {
+          return a.current_value / a.target_value - b.current_value / b.target_value;
+        }
+        if (sortBy === 'alphabetical') {
+          return a.title.localeCompare(b.title);
+        }
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+    };
+
+    // Map filtered items per category
+    const itemsMap: Record<string, TrackingItem[]> = {};
+    let totalMatches = 0;
+
+    categories.forEach((cat) => {
+      const catItems = items.filter((it) => it.category_id === cat.id);
+      const matched = catItems.filter(itemMatches);
+      itemsMap[cat.id] = sortItemsList(matched);
+      totalMatches += matched.length;
+    });
+
+    // 2. Filter categories
+    let visibleCategories = categories.filter((cat) => {
+      if (selectedCategoryId && cat.id !== selectedCategoryId) return false;
+
+      const catNameMatches = q ? cat.name.toLowerCase().includes(q) || (cat.description?.toLowerCase().includes(q) ?? false) : false;
+      const hasMatchingItems = (itemsMap[cat.id]?.length ?? 0) > 0;
+
+      // If there is an active search or status filter, only show category if it matches or has matching items
+      if (q || filterStatus !== 'all') {
+        return catNameMatches || hasMatchingItems;
+      }
+
+      return true;
+    });
+
+    // 3. Sort categories
+    const getCatProgress = (cat: Category) => {
+      const catItems = items.filter((it) => it.category_id === cat.id);
+      if (catItems.length === 0) return 0;
+      const sum = catItems.reduce((acc, curr) => acc + Math.min(1, curr.current_value / curr.target_value), 0);
+      return (sum / catItems.length) * 100;
+    };
+
+    visibleCategories = [...visibleCategories].sort((a, b) => {
+      if (sortBy === 'highest_progress') {
+        return getCatProgress(b) - getCatProgress(a);
+      }
+      if (sortBy === 'lowest_progress') {
+        return getCatProgress(a) - getCatProgress(b);
+      }
+      if (sortBy === 'alphabetical') {
+        return a.name.localeCompare(b.name);
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    return {
+      filteredAndSortedCategories: visibleCategories,
+      filteredItemsMap: itemsMap,
+      totalMatchingGoalsCount: totalMatches,
+    };
+  }, [categories, items, selectedCategoryId, searchQuery, filterStatus, sortBy]);
 
   const activeCategoryForStepper = fastStepperItem
     ? categories.find((c) => c.id === fastStepperItem.category_id)
     : undefined;
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setFilterStatus('all');
+    setSortBy('newest');
+    setSelectedCategoryId(null);
+  };
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#000000] text-neutral-900 dark:text-neutral-100 transition-colors duration-300 relative">
@@ -250,9 +353,11 @@ export const Feed: React.FC = () => {
               {/* Navigation Links */}
               <nav className="space-y-1.5 text-sm font-semibold">
                 <button
-                  onClick={() => setSelectedCategoryId(null)}
+                  onClick={() => {
+                    handleResetFilters();
+                  }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all ${
-                    selectedCategoryId === null
+                    selectedCategoryId === null && searchQuery === '' && filterStatus === 'all'
                       ? 'bg-neutral-900 text-white dark:bg-white dark:text-black shadow-md'
                       : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-[#181818]'
                   }`}
@@ -342,7 +447,7 @@ export const Feed: React.FC = () => {
             </div>
           </aside>
 
-          {/* CENTER COLUMN: Main Feed & Stories */}
+          {/* CENTER COLUMN: Main Feed, Stories & Category Stream */}
           <main className="lg:col-span-5 w-full space-y-4 pb-8 lg:pb-12">
             {/* Mobile Profile Badge */}
             <div className="lg:hidden glass-panel p-3.5 rounded-2xl flex items-center justify-between">
@@ -386,7 +491,18 @@ export const Feed: React.FC = () => {
               onOpenCreateCategory={handleOpenCreateCategory}
             />
 
-            {/* Filter Pill */}
+            {/* Search, Filter Status & Sorting Bar */}
+            <SearchAndFilterBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              filterStatus={filterStatus}
+              onFilterStatusChange={setFilterStatus}
+              sortBy={sortBy}
+              onSortByChange={setSortBy}
+              totalFilteredGoalsCount={totalMatchingGoalsCount}
+            />
+
+            {/* Active Filter Pill */}
             {selectedCategoryId && (
               <div className="flex items-center justify-between px-2 text-xs">
                 <span className="text-neutral-500 dark:text-neutral-400">
@@ -404,37 +520,61 @@ export const Feed: React.FC = () => {
               </div>
             )}
 
-            {/* Feed Cards */}
+            {/* Feed Cards Stream */}
             {loading && categories.length === 0 ? (
               <div className="py-16 text-center space-y-3">
                 <div className="w-7 h-7 border-2 border-[#E1306C] border-t-transparent rounded-full animate-spin mx-auto" />
                 <p className="text-xs text-neutral-400">Loading your goals and lists...</p>
               </div>
-            ) : filteredCategories.length === 0 ? (
-              <div className="glass-card rounded-3xl p-10 text-center space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-[#1c1c1c] flex items-center justify-center mx-auto text-neutral-400">
-                  <FolderPlus className="w-7 h-7" />
+            ) : filteredAndSortedCategories.length === 0 ? (
+              searchQuery || filterStatus !== 'all' ? (
+                /* Empty Search Results State */
+                <div className="glass-card rounded-3xl p-8 text-center space-y-3 animate-fade-in">
+                  <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-[#1e1e1e] flex items-center justify-center mx-auto text-neutral-400">
+                    <SearchX className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-neutral-800 dark:text-neutral-200">
+                      No Goals Matching Your Filter
+                    </h3>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xs mx-auto">
+                      No items matched "{searchQuery || filterStatus}". Try another keyword or reset your filters.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleResetFilters}
+                    className="px-4 py-2 rounded-xl bg-neutral-200/80 dark:bg-[#252525] text-neutral-800 dark:text-neutral-200 font-semibold text-xs hover:bg-neutral-300 dark:hover:bg-[#303030] transition-colors"
+                  >
+                    Clear Search & Filters
+                  </button>
                 </div>
-                <div>
-                  <h3 className="font-bold text-base text-neutral-800 dark:text-neutral-200">
-                    No Lists Created Yet
-                  </h3>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-xs mx-auto mt-1 leading-relaxed">
-                    Create your first category card (like Books, Steps, or Hydration) to start logging your daily progress!
-                  </p>
+              ) : (
+                /* Empty Initial Feed State */
+                <div className="glass-card rounded-3xl p-10 text-center space-y-4">
+                  <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-[#1c1c1c] flex items-center justify-center mx-auto text-neutral-400">
+                    <FolderPlus className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base text-neutral-800 dark:text-neutral-200">
+                      No Lists Created Yet
+                    </h3>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-xs mx-auto mt-1 leading-relaxed">
+                      Create your first category card (like Books, Steps, or Hydration) to start logging your daily progress!
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleOpenCreateCategory}
+                    className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] text-white font-bold text-xs shadow-lg shadow-pink-500/25 active:scale-95 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create Category Card</span>
+                  </button>
                 </div>
-                <button
-                  onClick={handleOpenCreateCategory}
-                  className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] text-white font-bold text-xs shadow-lg shadow-pink-500/25 active:scale-95 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Create Category Card</span>
-                </button>
-              </div>
+              )
             ) : (
               <div className="space-y-4">
-                {filteredCategories.map((category) => {
-                  const categoryItems = items.filter((it) => it.category_id === category.id);
+                {filteredAndSortedCategories.map((category) => {
+                  const categoryItems = filteredItemsMap[category.id] || [];
                   return (
                     <CategoryCard
                       key={category.id}
