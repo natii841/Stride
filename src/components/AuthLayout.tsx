@@ -19,7 +19,11 @@ interface AuthLayoutProps {
   subtitle?: string;
 }
 
-export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitle }) => {
+export const AuthLayout: React.FC<AuthLayoutProps> = ({
+  children,
+  title,
+  subtitle,
+}) => {
   const { theme, toggleTheme } = useTheme();
   const { isConfigured } = useAuth();
 
@@ -35,7 +39,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] p-[2px] shadow-lg shadow-pink-500/20 flex items-center justify-center">
             <div className="w-full h-full bg-white dark:bg-[#121212] rounded-[10px] flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-[#E1306C]" />
+              <span className="w-5 h-5 inline-flex items-center justify-center font-bold text-[#E1306C] text-sm leading-none select-none">
+                S
+              </span>
             </div>
           </div>
           <span className="font-extrabold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] font-sans">
@@ -49,14 +55,17 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
           title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
           aria-label="Toggle theme"
         >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-700" />}
+          {theme === 'dark' ? (
+            <Sun className="w-4 h-4 text-amber-400" />
+          ) : (
+            <Moon className="w-4 h-4 text-neutral-700" />
+          )}
         </button>
       </header>
 
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-6 py-6 max-w-7xl mx-auto w-full">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          
           {/* LEFT COLUMN: Modern Interactive Visual Showcase (Desktop & Large screens) */}
           <div className="hidden lg:flex lg:col-span-7 flex-col justify-center space-y-8 pr-4">
             <div className="space-y-4 max-w-lg">
@@ -71,7 +80,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
                 </span>
               </h1>
               <p className="text-sm xl:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Experience an Instagram-inspired visual habit tracker. Monitor your reading, daily steps, hydration, and custom goals in real-time with synchronized cloud persistence.
+                Experience an Instagram-inspired visual habit tracker. Monitor
+                your reading, daily steps, hydration, and custom goals in
+                real-time with synchronized cloud persistence.
               </p>
             </div>
 
@@ -85,8 +96,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
                       <Footprints className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-xs text-neutral-900 dark:text-white">Daily Steps</h4>
-                      <p className="text-[10px] text-neutral-400">Activity Goal</p>
+                      <h4 className="font-bold text-xs text-neutral-900 dark:text-white">
+                        Daily Steps
+                      </h4>
+                      <p className="text-[10px] text-neutral-400">
+                        Activity Goal
+                      </p>
                     </div>
                   </div>
                   <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full flex items-center space-x-1">
@@ -111,11 +126,20 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
                       <BookOpen className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-xs text-neutral-900 dark:text-white">Atomic Habits</h4>
-                      <p className="text-[10px] text-neutral-400">Reading List</p>
+                      <h4 className="font-bold text-xs text-neutral-900 dark:text-white">
+                        Atomic Habits
+                      </h4>
+                      <p className="text-[10px] text-neutral-400">
+                        Reading List
+                      </p>
                     </div>
                   </div>
-                  <ProgressRing percentage={78} size={34} strokeWidth={3.5} color="#E1306C">
+                  <ProgressRing
+                    percentage={78}
+                    size={34}
+                    strokeWidth={3.5}
+                    color="#E1306C"
+                  >
                     <span className="font-mono font-bold text-[8px]">78%</span>
                   </ProgressRing>
                 </div>
@@ -144,7 +168,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
               <div className="w-full max-w-[420px] mb-4 p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start space-x-2.5 text-xs text-amber-700 dark:text-amber-300 animate-fade-in backdrop-blur-md">
                 <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-500" />
                 <div>
-                  <span className="font-semibold">Setup Notice:</span> Provide your Supabase credentials in <code className="px-1 py-0.5 bg-amber-500/20 rounded font-mono text-[11px]">.env</code> to connect real-time Postgres synchronization.
+                  <span className="font-semibold">Setup Notice:</span> Provide
+                  your Supabase credentials in{' '}
+                  <code className="px-1 py-0.5 bg-amber-500/20 rounded font-mono text-[11px]">
+                    .env
+                  </code>{' '}
+                  to connect real-time Postgres synchronization.
                 </div>
               </div>
             )}
@@ -174,18 +203,27 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
               {children}
             </div>
           </div>
-
         </div>
       </main>
 
       {/* Footer */}
       <footer className="relative z-10 w-full py-5 px-6 text-center text-xs text-neutral-400 dark:text-neutral-600">
         <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 mb-2">
-          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">About</span>
-          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">Features</span>
-          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">Security</span>
-          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">Privacy</span>
-          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">Terms</span>
+          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">
+            About
+          </span>
+          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">
+            Features
+          </span>
+          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">
+            Security
+          </span>
+          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">
+            Privacy
+          </span>
+          <span className="hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">
+            Terms
+          </span>
         </div>
         <p>© 2026 Stride · Next-Gen Goal & Habit Platform</p>
       </footer>

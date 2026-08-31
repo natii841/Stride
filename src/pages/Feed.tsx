@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Category, TrackingItem, CreateCategoryDTO, UpdateCategoryDTO, CreateItemDTO, UpdateItemDTO } from '../types/database';
+import {
+  Category,
+  TrackingItem,
+  CreateCategoryDTO,
+  UpdateCategoryDTO,
+  CreateItemDTO,
+  UpdateItemDTO,
+} from '../types/database';
 import * as strideService from '../services/strideService';
 import { DashboardAnalytics } from '../components/DashboardAnalytics';
 import { CategoryStories } from '../components/CategoryStories';
@@ -11,7 +18,11 @@ import { CreateItemModal } from '../components/CreateItemModal';
 import { FastStepperModal } from '../components/FastStepperModal';
 import { MilestoneCelebration } from '../components/MilestoneCelebration';
 import { EditProfileModal } from '../components/EditProfileModal';
-import { SearchAndFilterBar, FilterStatus, SortOption } from '../components/SearchAndFilterBar';
+import {
+  SearchAndFilterBar,
+  FilterStatus,
+  SortOption,
+} from '../components/SearchAndFilterBar';
 import {
   LogOut,
   Moon,
@@ -37,7 +48,9 @@ export const Feed: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<TrackingItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
 
   // Search, Status Filter & Sorting State
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,17 +63,23 @@ export const Feed: React.FC = () => {
 
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<TrackingItem | null>(null);
-  const [targetCategoryIdForItem, setTargetCategoryIdForItem] = useState<string | null>(null);
+  const [targetCategoryIdForItem, setTargetCategoryIdForItem] = useState<
+    string | null
+  >(null);
 
   // Fast Stepper state
-  const [fastStepperItem, setFastStepperItem] = useState<TrackingItem | null>(null);
+  const [fastStepperItem, setFastStepperItem] = useState<TrackingItem | null>(
+    null
+  );
   const [isFastStepperOpen, setIsFastStepperOpen] = useState(false);
 
   // Profile Edit modal state
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   // Milestone celebration state
-  const [celebrationItem, setCelebrationItem] = useState<TrackingItem | null>(null);
+  const [celebrationItem, setCelebrationItem] = useState<TrackingItem | null>(
+    null
+  );
 
   // Load data for active user
   const loadData = useCallback(async () => {
@@ -95,22 +114,35 @@ export const Feed: React.FC = () => {
     setIsCategoryModalOpen(true);
   };
 
-  const handleCategorySubmit = async (data: CreateCategoryDTO | UpdateCategoryDTO) => {
+  const handleCategorySubmit = async (
+    data: CreateCategoryDTO | UpdateCategoryDTO
+  ) => {
     if (!user) return;
     if (editingCategory) {
-      const updated = await strideService.updateCategory(user.id, editingCategory.id, data);
+      const updated = await strideService.updateCategory(
+        user.id,
+        editingCategory.id,
+        data
+      );
       if (updated) {
-        setCategories((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+        setCategories((prev) =>
+          prev.map((c) => (c.id === updated.id ? updated : c))
+        );
       }
     } else {
-      const created = await strideService.createCategory(user.id, data as CreateCategoryDTO);
+      const created = await strideService.createCategory(
+        user.id,
+        data as CreateCategoryDTO
+      );
       setCategories((prev) => [created, ...prev]);
     }
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
     if (!user) return;
-    const confirmed = window.confirm('Are you sure you want to delete this list and all its tracked items?');
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this list and all its tracked items?'
+    );
     if (!confirmed) return;
 
     setCategories((prev) => prev.filter((c) => c.id !== categoryId));
@@ -123,7 +155,9 @@ export const Feed: React.FC = () => {
   // ITEM CRUD ACTIONS
   const handleOpenAddItem = (categoryId?: string) => {
     setEditingItem(null);
-    setTargetCategoryIdForItem(categoryId || selectedCategoryId || categories[0]?.id || null);
+    setTargetCategoryIdForItem(
+      categoryId || selectedCategoryId || categories[0]?.id || null
+    );
     setIsItemModalOpen(true);
   };
 
@@ -136,12 +170,21 @@ export const Feed: React.FC = () => {
   const handleItemSubmit = async (data: CreateItemDTO | UpdateItemDTO) => {
     if (!user) return;
     if (editingItem) {
-      const updated = await strideService.updateItem(user.id, editingItem.id, data);
+      const updated = await strideService.updateItem(
+        user.id,
+        editingItem.id,
+        data
+      );
       if (updated) {
-        setItems((prev) => prev.map((it) => (it.id === updated.id ? updated : it)));
+        setItems((prev) =>
+          prev.map((it) => (it.id === updated.id ? updated : it))
+        );
       }
     } else {
-      const created = await strideService.createItem(user.id, data as CreateItemDTO);
+      const created = await strideService.createItem(
+        user.id,
+        data as CreateItemDTO
+      );
       setItems((prev) => [...prev, created]);
     }
   };
@@ -149,13 +192,20 @@ export const Feed: React.FC = () => {
   const handleUpdateItemProgress = async (itemId: string, newValue: number) => {
     if (!user) return;
     const currentItem = items.find((i) => i.id === itemId);
-    const wasAlreadyCompleted = currentItem && currentItem.current_value >= currentItem.target_value;
+    const wasAlreadyCompleted =
+      currentItem && currentItem.current_value >= currentItem.target_value;
 
     setItems((prev) =>
-      prev.map((it) => (it.id === itemId ? { ...it, current_value: newValue } : it))
+      prev.map((it) =>
+        it.id === itemId ? { ...it, current_value: newValue } : it
+      )
     );
 
-    if (currentItem && newValue >= currentItem.target_value && !wasAlreadyCompleted) {
+    if (
+      currentItem &&
+      newValue >= currentItem.target_value &&
+      !wasAlreadyCompleted
+    ) {
       setCelebrationItem({ ...currentItem, current_value: newValue });
     }
 
@@ -174,7 +224,11 @@ export const Feed: React.FC = () => {
   };
 
   // COMPUTED: Search, Status Filter & Sorting Logic
-  const { filteredAndSortedCategories, filteredItemsMap, totalMatchingGoalsCount } = useMemo(() => {
+  const {
+    filteredAndSortedCategories,
+    filteredItemsMap,
+    totalMatchingGoalsCount,
+  } = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
 
     // 1. Filter items by query and status
@@ -183,15 +237,17 @@ export const Feed: React.FC = () => {
         filterStatus === 'all'
           ? true
           : filterStatus === 'active'
-          ? item.current_value < item.target_value
-          : item.current_value >= item.target_value;
+            ? item.current_value < item.target_value
+            : item.current_value >= item.target_value;
 
       if (!matchesStatus) return false;
 
       if (!q) return true;
 
       const titleMatch = item.title.toLowerCase().includes(q);
-      const notesMatch = item.notes ? item.notes.toLowerCase().includes(q) : false;
+      const notesMatch = item.notes
+        ? item.notes.toLowerCase().includes(q)
+        : false;
       const unitMatch = item.unit.toLowerCase().includes(q);
       return titleMatch || notesMatch || unitMatch;
     };
@@ -200,15 +256,21 @@ export const Feed: React.FC = () => {
     const sortItemsList = (itemList: TrackingItem[]) => {
       return [...itemList].sort((a, b) => {
         if (sortBy === 'highest_progress') {
-          return b.current_value / b.target_value - a.current_value / a.target_value;
+          return (
+            b.current_value / b.target_value - a.current_value / a.target_value
+          );
         }
         if (sortBy === 'lowest_progress') {
-          return a.current_value / a.target_value - b.current_value / b.target_value;
+          return (
+            a.current_value / a.target_value - b.current_value / b.target_value
+          );
         }
         if (sortBy === 'alphabetical') {
           return a.title.localeCompare(b.title);
         }
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       });
     };
 
@@ -227,7 +289,10 @@ export const Feed: React.FC = () => {
     let visibleCategories = categories.filter((cat) => {
       if (selectedCategoryId && cat.id !== selectedCategoryId) return false;
 
-      const catNameMatches = q ? cat.name.toLowerCase().includes(q) || (cat.description?.toLowerCase().includes(q) ?? false) : false;
+      const catNameMatches = q
+        ? cat.name.toLowerCase().includes(q) ||
+          (cat.description?.toLowerCase().includes(q) ?? false)
+        : false;
       const hasMatchingItems = (itemsMap[cat.id]?.length ?? 0) > 0;
 
       // If there is an active search or status filter, only show category if it matches or has matching items
@@ -242,7 +307,11 @@ export const Feed: React.FC = () => {
     const getCatProgress = (cat: Category) => {
       const catItems = items.filter((it) => it.category_id === cat.id);
       if (catItems.length === 0) return 0;
-      const sum = catItems.reduce((acc, curr) => acc + Math.min(1, curr.current_value / curr.target_value), 0);
+      const sum = catItems.reduce(
+        (acc, curr) =>
+          acc + Math.min(1, curr.current_value / curr.target_value),
+        0
+      );
       return (sum / catItems.length) * 100;
     };
 
@@ -256,7 +325,9 @@ export const Feed: React.FC = () => {
       if (sortBy === 'alphabetical') {
         return a.name.localeCompare(b.name);
       }
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     });
 
     return {
@@ -264,7 +335,14 @@ export const Feed: React.FC = () => {
       filteredItemsMap: itemsMap,
       totalMatchingGoalsCount: totalMatches,
     };
-  }, [categories, items, selectedCategoryId, searchQuery, filterStatus, sortBy]);
+  }, [
+    categories,
+    items,
+    selectedCategoryId,
+    searchQuery,
+    filterStatus,
+    sortBy,
+  ]);
 
   const activeCategoryForStepper = fastStepperItem
     ? categories.find((c) => c.id === fastStepperItem.category_id)
@@ -314,7 +392,11 @@ export const Feed: React.FC = () => {
             onClick={toggleTheme}
             className="p-2 rounded-full border border-neutral-200/80 dark:border-[#262626] bg-white/70 dark:bg-[#161616] text-neutral-700 dark:text-neutral-300"
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-700" />}
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-neutral-700" />
+            )}
           </button>
           <button
             onClick={() => signOut()}
@@ -329,7 +411,6 @@ export const Feed: React.FC = () => {
       {/* Responsive Shell: 3-Column on Desktop, Fluid Center on Mobile */}
       <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 lg:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-
           {/* LEFT COLUMN: Desktop Sticky Sidebar */}
           <aside className="hidden lg:flex lg:col-span-3 sticky top-8 flex-col justify-between h-[calc(100vh-4rem)] space-y-6">
             <div className="space-y-6">
@@ -337,7 +418,9 @@ export const Feed: React.FC = () => {
               <div className="flex items-center space-x-3 px-2">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] p-[2px] shadow-lg shadow-pink-500/20 flex items-center justify-center">
                   <div className="w-full h-full bg-white dark:bg-[#121212] rounded-[14px] flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-[#E1306C]" />
+                    <span className="w-5 h-5 inline-flex items-center justify-center font-bold text-[#E1306C] text-sm leading-none select-none">
+                      S
+                    </span>
                   </div>
                 </div>
                 <div>
@@ -357,7 +440,9 @@ export const Feed: React.FC = () => {
                     handleResetFilters();
                   }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all ${
-                    selectedCategoryId === null && searchQuery === '' && filterStatus === 'all'
+                    selectedCategoryId === null &&
+                    searchQuery === '' &&
+                    filterStatus === 'all'
                       ? 'bg-neutral-900 text-white dark:bg-white dark:text-black shadow-md'
                       : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-[#181818]'
                   }`}
@@ -396,7 +481,11 @@ export const Feed: React.FC = () => {
                   onClick={toggleTheme}
                   className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-[#181818] transition-all"
                 >
-                  {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-neutral-700" />}
+                  {theme === 'dark' ? (
+                    <Sun className="w-5 h-5 text-amber-400" />
+                  ) : (
+                    <Moon className="w-5 h-5 text-neutral-700" />
+                  )}
                   <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                 </button>
               </nav>
@@ -433,7 +522,9 @@ export const Feed: React.FC = () => {
                   <h4 className="font-bold text-xs text-neutral-900 dark:text-white truncate">
                     {profile?.full_name || 'Member'}
                   </h4>
-                  <p className="text-[11px] text-neutral-400 truncate">@{profile?.username}</p>
+                  <p className="text-[11px] text-neutral-400 truncate">
+                    @{profile?.username}
+                  </p>
                 </div>
               </button>
 
@@ -462,10 +553,14 @@ export const Feed: React.FC = () => {
                 />
                 <div>
                   <div className="flex items-center space-x-1.5">
-                    <span className="font-bold text-sm">{profile?.full_name}</span>
+                    <span className="font-bold text-sm">
+                      {profile?.full_name}
+                    </span>
                     <ShieldCheck className="w-4 h-4 text-[#3897F0]" />
                   </div>
-                  <span className="text-xs text-neutral-400">@{profile?.username} · Tap to edit</span>
+                  <span className="text-xs text-neutral-400">
+                    @{profile?.username} · Tap to edit
+                  </span>
                 </div>
               </button>
 
@@ -474,7 +569,9 @@ export const Feed: React.FC = () => {
                 className="p-2 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
                 title="Refresh"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+                />
               </button>
             </div>
 
@@ -524,7 +621,9 @@ export const Feed: React.FC = () => {
             {loading && categories.length === 0 ? (
               <div className="py-16 text-center space-y-3">
                 <div className="w-7 h-7 border-2 border-[#E1306C] border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-xs text-neutral-400">Loading your goals and lists...</p>
+                <p className="text-xs text-neutral-400">
+                  Loading your goals and lists...
+                </p>
               </div>
             ) : filteredAndSortedCategories.length === 0 ? (
               searchQuery || filterStatus !== 'all' ? (
@@ -538,7 +637,8 @@ export const Feed: React.FC = () => {
                       No Goals Matching Your Filter
                     </h3>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xs mx-auto">
-                      No items matched "{searchQuery || filterStatus}". Try another keyword or reset your filters.
+                      No items matched "{searchQuery || filterStatus}". Try
+                      another keyword or reset your filters.
                     </p>
                   </div>
                   <button
@@ -559,7 +659,8 @@ export const Feed: React.FC = () => {
                       No Lists Created Yet
                     </h3>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-xs mx-auto mt-1 leading-relaxed">
-                      Create your first category card (like Books, Steps, or Hydration) to start logging your daily progress!
+                      Create your first category card (like Books, Steps, or
+                      Hydration) to start logging your daily progress!
                     </p>
                   </div>
                   <button
@@ -615,7 +716,6 @@ export const Feed: React.FC = () => {
               </div>
             </div>
           </aside>
-
         </div>
       </div>
 
@@ -647,7 +747,9 @@ export const Feed: React.FC = () => {
         item={fastStepperItem}
         categoryColor={activeCategoryForStepper?.color}
         onSaveProgress={handleUpdateItemProgress}
-        onMilestoneAchieved={(milestoneItem) => setCelebrationItem(milestoneItem)}
+        onMilestoneAchieved={(milestoneItem) =>
+          setCelebrationItem(milestoneItem)
+        }
       />
 
       {/* Edit Profile Modal */}
