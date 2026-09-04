@@ -1,8 +1,12 @@
 -- Stride security hardening migration
 -- Run this migration against the existing Supabase database.
 --
--- This migration is intentionally idempotent where PostgreSQL allows it:
--- running it again will not recreate constraints that already exist.
+-- This migration targets the schema currently used by the live database:
+-- categories(id, user_id, name, created_at, updated_at)
+-- items(id, user_id, category_id, title, unit_label, current_step,
+--       total_steps, status, created_at, updated_at)
+--
+-- It is intentionally idempotent so it can be safely re-run.
 
 -- 1. Make the (category id, owner id) pair uniquely referenceable.
 do $$
@@ -37,8 +41,7 @@ begin
 end
 $$;
 
--- 3. Add practical length/format limits at the database boundary.
--- The DO blocks make these safe to re-run without duplicate-constraint errors.
+-- 3. Add practical length limits to fields that actually exist in the live DB.
 do $$
 begin
   if not exists (
@@ -53,40 +56,6 @@ begin
 
   if not exists (
     select 1 from pg_constraint
-    where conname = 'categories_icon_length_check'
-      and conrelid = 'public.categories'::regclass
-  ) then
-    alter table public.categories
-      add constraint categories_icon_length_check
-      check (char_length(icon) between 1 and 50);
-  end if;
-
-  if not exists (
-    select 1 from pg_constraint
-    where conname = 'categories_color_format_check'
-      and conrelid = 'public.categories'::regclass
-  ) then
-    alter table public.categories
-      add constraint categories_color_format_check
-      check (color ~ '^#[0-9A-Fa-f]{6}$');
-  end if;
-
-  if not exists (
-    select 1 from pg_constraint
-    where conname = 'categories_description_length_check'
-      and conrelid = 'public.categories'::regclass
-  ) then
-    alter table public.categories
-      add constraint categories_description_length_check
-      check (description is null or char_length(description) <= 1000);
-  end if;
-end
-$$;
-
-do $$
-begin
-  if not exists (
-    select 1 from pg_constraint
     where conname = 'items_title_length_check'
       and conrelid = 'public.items'::regclass
   ) then
@@ -97,22 +66,12 @@ begin
 
   if not exists (
     select 1 from pg_constraint
-    where conname = 'items_unit_length_check'
+    where conname = 'items_unit_label_length_check'
       and conrelid = 'public.items'::regclass
   ) then
     alter table public.items
-      add constraint items_unit_length_check
-      check (char_length(unit) between 1 and 50);
-  end if;
-
-  if not exists (
-    select 1 from pg_constraint
-    where conname = 'items_notes_length_check'
-      and conrelid = 'public.items'::regclass
-  ) then
-    alter table public.items
-      add constraint items_notes_length_check
-      check (notes is null or char_length(notes) <= 5000);
+      add constraint items_unit_label_length_check
+      check (char_length(unit_label) between 1 and 50);
   end if;
 end
 $$;
